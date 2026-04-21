@@ -1,2 +1,2 @@
 discord.py
-wavelink
+wavelink==3.3.0
