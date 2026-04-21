@@ -10,21 +10,19 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ================= LAVALINK =================
-LAVALINK_HOST = "localhost"
-LAVALINK_PORT = 2333
+# ================= LAVALINK SETTINGS =================
+LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com"  # 🔴 حط رابط Render هنا
 LAVALINK_PASSWORD = "youshallnotpass"
 
+# ================= CONNECT LAVALINK =================
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-
-    # اتصال Lavalink
     await connect_nodes()
 
 async def connect_nodes():
     node = wavelink.Node(
-        uri=f"http://{LAVALINK_HOST}:{LAVALINK_PORT}",
+        uri=LAVALINK_URL,
         password=LAVALINK_PASSWORD
     )
 
@@ -42,30 +40,35 @@ async def join_voice(ctx):
     else:
         await ctx.voice_client.move_to(channel)
 
-# ================= PLAY =================
+# ================= PLAY (URL ONLY) =================
 @bot.command()
-async def play(ctx, *, search: str):
+async def play(ctx, url: str):
     await join_voice(ctx)
 
     vc: wavelink.Player = ctx.voice_client
 
-    tracks = await wavelink.Playable.search(search)
+    try:
+        tracks = await wavelink.Playable.search(url)
 
-    if not tracks:
-        return await ctx.send("❌ ما لقيت شيء")
+        if not tracks:
+            return await ctx.send("❌ ما قدرت أجيب الصوت من الرابط")
 
-    track = tracks[0]
+        track = tracks[0] if isinstance(tracks, list) else tracks
 
-    await vc.play(track)
+        await vc.play(track)
 
-    await ctx.send(f"🎶 تشغيل: **{track.title}**")
+        await ctx.send(f"🎶 جاري التشغيل: **{track.title}**")
+
+    except Exception as e:
+        await ctx.send("❌ صار خطأ أثناء التشغيل")
+        print(e)
 
 # ================= SKIP =================
 @bot.command()
 async def skip(ctx):
     vc: wavelink.Player = ctx.voice_client
 
-    if vc:
+    if vc and vc.playing:
         await vc.stop()
         await ctx.send("⏭ تم التخطي")
 
