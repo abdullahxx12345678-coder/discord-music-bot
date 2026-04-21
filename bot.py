@@ -47,19 +47,19 @@ async def play(ctx, url: str):
     vc: wavelink.Player = ctx.voice_client
 
     try:
-        tracks = await wavelink.Playable.search(url)
+        track = await wavelink.Playable.search(url)
 
-        if not tracks:
-            return await ctx.send("❌ ما قدرت أجيب الصوت من الرابط")
+        if not track:
+            return await ctx.send("❌ ما قدرت أجيب الأغنية")
 
-        track = tracks[0] if isinstance(tracks, list) else tracks
+        track = track[0] if isinstance(track, list) else track
 
         await vc.play(track)
 
-        await ctx.send(f"🎶 جاري التشغيل: **{track.title}**")
+        await ctx.send(f"🎶 تشغيل: **{track.title}**")
 
     except Exception as e:
-        await ctx.send("❌ صار خطأ أثناء التشغيل")
+        await ctx.send("❌ صار خطأ في التشغيل")
         print(e)
 
 # ================= SKIP =================
