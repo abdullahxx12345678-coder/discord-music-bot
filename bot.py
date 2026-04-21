@@ -41,11 +41,16 @@ async def join_voice(ctx):
         return None
 
     channel = ctx.author.voice.channel
+
     vc = ctx.voice_client
 
     if vc is None:
-        vc = await channel.connect(cls=wavelink.Player)
-    elif vc.channel != channel:
+        try:
+            vc = await channel.connect()
+        except:
+            await ctx.send("❌ ما قدرت أدخل الروم الصوتي")
+            return None
+    else:
         await vc.move_to(channel)
 
     return vc
@@ -53,27 +58,14 @@ async def join_voice(ctx):
 # ================= PLAY =================
 @bot.command()
 async def play(ctx, url: str):
-    await ctx.send("🎵 جاري المعالجة...")
+    await ctx.send("🎵 اختبار دخول الصوت...")
 
     vc = await join_voice(ctx)
-    if not vc:
-        return
 
-    try:
-        tracks = await wavelink.Playable.search(url)
-
-        if not tracks:
-            return await ctx.send("❌ ما لقيت الصوت")
-
-        track = tracks[0] if isinstance(tracks, list) else tracks
-
-        await vc.play(track)
-
-        await ctx.send(f"🎶 تشغيل: **{track.title}**")
-
-    except Exception as e:
-        await ctx.send("❌ خطأ في التشغيل")
-        print(e)
+    if vc:
+        await ctx.send("✔ دخلت الروم الصوتي بنجاح")
+    else:
+        await ctx.send("❌ فشل الدخول")
 
 # ================= CONTROLS =================
 @bot.command()
