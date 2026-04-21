@@ -26,24 +26,18 @@ async def connect_nodes():
 # ================= CONNECT LAVALINK =================
 @bot.event
 async def on_ready():
-    print("BOT ONLINE")
-    try:
-        await connect_nodes()
-        print("LAVALINK CONNECT ATTEMPT DONE")
-    except Exception as e:
-        print("ERROR CONNECTING NODE:", e)
+    print(f"Logged in as {bot.user}")
+    await connect_nodes()
 
-# ================= JOIN VOICE =================
-async def join_voice(ctx):
-    if not ctx.author.voice:
-        return await ctx.send("❌ ادخل روم صوتي أول")
 
-    channel = ctx.author.voice.channel
+async def connect_nodes():
+    node = wavelink.Node(
+        uri=LAVALINK_URL,
+        password=LAVALINK_PASSWORD,
+        identifier="MAIN"
+    )
 
-    if not ctx.voice_client:
-        await channel.connect(cls=wavelink.Player)
-    else:
-        await ctx.voice_client.move_to(channel)
+    await wavelink.Pool.connect(client=bot, nodes=[node])
 
 # ================= PLAY (URL ONLY) =================
 @bot.command()
