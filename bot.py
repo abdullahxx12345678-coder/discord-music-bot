@@ -17,16 +17,12 @@ LAVALINK_PASSWORD = "youshallnotpass"
 # ================= CONNECT LAVALINK =================
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
-    await connect_nodes()
-
-async def connect_nodes():
-    node = wavelink.Node(
-        uri=LAVALINK_URL,
-        password=LAVALINK_PASSWORD
-    )
-
-    await wavelink.Pool.connect(client=bot, nodes=[node])
+    print("BOT ONLINE")
+    try:
+        await connect_nodes()
+        print("LAVALINK CONNECT ATTEMPT DONE")
+    except Exception as e:
+        print("ERROR CONNECTING NODE:", e)
 
 # ================= JOIN VOICE =================
 async def join_voice(ctx):
