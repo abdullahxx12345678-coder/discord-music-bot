@@ -26,14 +26,17 @@ async def connect_nodes():
 async def join_voice(ctx):
     if not ctx.author.voice:
         await ctx.send("❌ ادخل روم صوتي أول")
-        return
+        return None
 
     channel = ctx.author.voice.channel
+    vc = ctx.voice_client
 
-    if ctx.voice_client is None:
-        await channel.connect()
+    if vc is None:
+        vc = await channel.connect(cls=wavelink.Player)
     else:
-        await ctx.voice_client.move_to(channel)
+        await vc.move_to(channel)
+
+    return vc
 
 # ================= CONNECT LAVALINK =================
 @bot.event
@@ -54,14 +57,27 @@ async def connect_nodes():
 # ================= PLAY (URL ONLY) =================
 @bot.command()
 async def play(ctx, url: str):
-    await ctx.send("1️⃣ دخل أمر play")
+    await ctx.send("🎵 جاري المعالجة...")
 
-    if not ctx.author.voice:
-        return await ctx.send("❌ ادخل روم صوتي أول")
+    vc = await join_voice(ctx)
+    if not vc:
+        return
 
-    await ctx.send("2️⃣ أنت في روم صوتي")
+    try:
+        tracks = await wavelink.Playable.search(url)
 
-    await ctx.send(f"3️⃣ الرابط اللي استلمته: {url}")
+        if not tracks:
+            return await ctx.send("❌ ما لقيت الصوت")
+
+        track = tracks[0] if isinstance(tracks, list) else tracks
+
+        await vc.play(track)
+
+        await ctx.send(f"🎶 تشغيل: **{track.title}**")
+
+    except Exception as e:
+        await ctx.send("❌ خطأ في تشغيل الصوت")
+        print(e)
 
 # ================= SKIP =================
 @bot.command()
