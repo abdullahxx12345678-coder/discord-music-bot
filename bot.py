@@ -33,7 +33,6 @@ async def connect_nodes():
 
     except Exception as e:
         print("Lavalink Error:", e)
-
 # ================= JOIN VOICE =================
 async def join_voice(ctx):
     if not ctx.author.voice:
