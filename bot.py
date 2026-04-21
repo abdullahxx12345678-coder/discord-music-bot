@@ -11,18 +11,30 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ================= LAVALINK SETTINGS =================
-LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com/"  # 🔴 حط رابط Render هنا
+LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com"
 LAVALINK_PASSWORD = "12345678"
 
+# ================= LAVALINK CONNECT =================
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user}")
+    await connect_nodes()
+
 async def connect_nodes():
-    node = wavelink.Node(
-        uri=LAVALINK_URL,
-        password=LAVALINK_PASSWORD,
-        identifier="MAIN"
-    )
+    try:
+        node = wavelink.Node(
+            uri=LAVALINK_URL,
+            password=LAVALINK_PASSWORD,
+            identifier="MAIN"
+        )
 
-    await wavelink.Pool.connect(client=bot, nodes=[node])
+        await wavelink.Pool.connect(client=bot, nodes=[node])
+        print("Lavalink Connected ✔")
 
+    except Exception as e:
+        print("Lavalink Error:", e)
+
+# ================= JOIN VOICE =================
 async def join_voice(ctx):
     if not ctx.author.voice:
         await ctx.send("❌ ادخل روم صوتي أول")
@@ -33,28 +45,12 @@ async def join_voice(ctx):
 
     if vc is None:
         vc = await channel.connect(cls=wavelink.Player)
-    else:
+    elif vc.channel != channel:
         await vc.move_to(channel)
 
     return vc
 
-# ================= CONNECT LAVALINK =================
-@bot.event
-async def on_ready():
-    print(f"Logged in as {bot.user}")
-    await connect_nodes()
-
-
-async def connect_nodes():
-    node = wavelink.Node(
-        uri=LAVALINK_URL,
-        password=LAVALINK_PASSWORD,
-        identifier="MAIN"
-    )
-
-    await wavelink.Pool.connect(client=bot, nodes=[node])
-
-# ================= PLAY (URL ONLY) =================
+# ================= PLAY =================
 @bot.command()
 async def play(ctx, url: str):
     await ctx.send("🎵 جاري المعالجة...")
@@ -76,41 +72,34 @@ async def play(ctx, url: str):
         await ctx.send(f"🎶 تشغيل: **{track.title}**")
 
     except Exception as e:
-        await ctx.send("❌ خطأ في تشغيل الصوت")
+        await ctx.send("❌ خطأ في التشغيل")
         print(e)
 
-# ================= SKIP =================
+# ================= CONTROLS =================
 @bot.command()
 async def skip(ctx):
     vc: wavelink.Player = ctx.voice_client
-
     if vc and vc.playing:
         await vc.stop()
         await ctx.send("⏭ تم التخطي")
 
-# ================= PAUSE =================
 @bot.command()
 async def pause(ctx):
     vc: wavelink.Player = ctx.voice_client
-
     if vc:
         await vc.pause(True)
-        await ctx.send("⏸ توقف مؤقت")
+        await ctx.send("⏸ توقف")
 
-# ================= RESUME =================
 @bot.command()
 async def resume(ctx):
     vc: wavelink.Player = ctx.voice_client
-
     if vc:
         await vc.pause(False)
         await ctx.send("▶ استكمال")
 
-# ================= STOP =================
 @bot.command()
 async def stop(ctx):
     vc: wavelink.Player = ctx.voice_client
-
     if vc:
         await vc.disconnect()
         await ctx.send("⛔ تم الإيقاف")
@@ -119,5 +108,5 @@ async def stop(ctx):
 async def ping(ctx):
     await ctx.send("pong")
 
-# ================= RUN BOT =================
+# ================= RUN =================
 bot.run(os.getenv("TOKEN"))
