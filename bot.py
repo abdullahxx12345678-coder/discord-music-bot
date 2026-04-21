@@ -54,25 +54,14 @@ async def connect_nodes():
 # ================= PLAY (URL ONLY) =================
 @bot.command()
 async def play(ctx, url: str):
-    await join_voice(ctx)
+    await ctx.send("1️⃣ دخل أمر play")
 
-    vc: wavelink.Player = ctx.voice_client
+    if not ctx.author.voice:
+        return await ctx.send("❌ ادخل روم صوتي أول")
 
-    try:
-        track = await wavelink.Playable.search(url)
+    await ctx.send("2️⃣ أنت في روم صوتي")
 
-        if not track:
-            return await ctx.send("❌ ما قدرت أجيب الأغنية")
-
-        track = track[0] if isinstance(track, list) else track
-
-        await vc.play(track)
-
-        await ctx.send(f"🎶 تشغيل: **{track.title}**")
-
-    except Exception as e:
-        await ctx.send("❌ صار خطأ في التشغيل")
-        print(e)
+    await ctx.send(f"3️⃣ الرابط اللي استلمته: {url}")
 
 # ================= SKIP =================
 @bot.command()
