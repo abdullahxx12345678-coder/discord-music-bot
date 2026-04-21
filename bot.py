@@ -14,6 +14,15 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com"  # 🔴 حط رابط Render هنا
 LAVALINK_PASSWORD = "youshallnotpass"
 
+async def connect_nodes():
+    node = wavelink.Node(
+        uri=LAVALINK_URL,
+        password=LAVALINK_PASSWORD,
+        identifier="MAIN"
+    )
+
+    await wavelink.Pool.connect(client=bot, nodes=[node])
+
 # ================= CONNECT LAVALINK =================
 @bot.event
 async def on_ready():
