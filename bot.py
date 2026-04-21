@@ -12,7 +12,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ================= LAVALINK SETTINGS =================
 LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com/"  # 🔴 حط رابط Render هنا
-LAVALINK_PASSWORD = "youshallnotpass"
+LAVALINK_PASSWORD = "12345678"
 
 async def connect_nodes():
     node = wavelink.Node(
@@ -22,6 +22,18 @@ async def connect_nodes():
     )
 
     await wavelink.Pool.connect(client=bot, nodes=[node])
+
+async def join_voice(ctx):
+    if not ctx.author.voice:
+        await ctx.send("❌ ادخل روم صوتي أول")
+        return
+
+    channel = ctx.author.voice.channel
+
+    if ctx.voice_client is None:
+        await channel.connect()
+    else:
+        await ctx.voice_client.move_to(channel)
 
 # ================= CONNECT LAVALINK =================
 @bot.event
