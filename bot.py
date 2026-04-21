@@ -99,5 +99,9 @@ async def stop(ctx):
         await vc.disconnect()
         await ctx.send("⛔ تم الإيقاف")
 
+@bot.command()
+async def ping(ctx):
+    await ctx.send("pong")
+
 # ================= RUN BOT =================
 bot.run(os.getenv("TOKEN"))
