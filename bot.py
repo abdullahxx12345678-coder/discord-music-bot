@@ -17,18 +17,24 @@ LAVALINK_PASSWORD = "12345678"
 # ================= LAVALINK CONNECT =================
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
-    await connect_nodes()
+    if not hasattr(bot, "lavalink_ready"):
+        bot.lavalink_ready = True
+        print(f"Logged in as {bot.user}")
+        await connect_nodes()
 
 async def connect_nodes():
     try:
         node = wavelink.Node(
-            uri=LAVALINK_URL,
-            password=LAVALINK_PASSWORD,
+            uri="https://lavalink-server-tlb3.onrender.com",
+            password="12345678",
             identifier="MAIN"
         )
 
-        await wavelink.Pool.connect(client=bot, nodes=[node])
+        await wavelink.Pool.connect(
+            client=bot,
+            nodes=[node],
+        )
+
         print("Lavalink Connected ✔")
 
     except Exception as e:
