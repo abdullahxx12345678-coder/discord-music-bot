@@ -2,93 +2,63 @@ import discord
 from discord.ext import commands
 import wavelink
 import os
-import asyncio
 
-# ================= إعدادات البوت =================
 intents = discord.Intents.default()
-intents.message_content = True  # ضروري لقراءة الأوامر
-intents.voice_states = True     # ضروري لدخول الرومات الصوتية
+intents.message_content = True
+intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ================= إعدادات لافالينك =================
-# تأكد من الرابط: لا تضع / في نهايته
+# تأكد أن الرابط لا ينتهي بـ /
 LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com"
 LAVALINK_PASSWORD = "12345678"
 
-# ================= الأحداث (Events) =================
-
 @bot.event
 async def on_ready():
-    print(f"✅ تم تسجيل الدخول باسم: {bot.user}")
+    print(f"✅ Bot is ready: {bot.user}")
     
-    # ربط البوت بسيرفر لافالينك
-    node = wavelink.Node(uri=LAVALINK_URL, password=LAVALINK_PASSWORD)
+    # تعريف النود
+    node = wavelink.Node(
+        uri=LAVALINK_URL, 
+        password=LAVALINK_PASSWORD,
+        inactive_timeout=60
+    )
+    
     try:
-        await wavelink.Pool.connect(nodes=[node], client=bot, cache_capacity=100)
+        # الربط مع السيرفر
+        await wavelink.Pool.connect(nodes=[node], client=bot)
     except Exception as e:
-        print(f"❌ فشل الاتصال بسيرفر لافالينك: {e}")
+        print(f"❌ Connection error: {e}")
 
 @bot.event
 async def on_wavelink_node_ready(payload: wavelink.NodeReadyEventPayload):
-    print(f"🚀 سيرفر لافالينك جاهز للعمل: {payload.node.identifier}")
+    print(f"🚀 Node {payload.node.identifier} is connected and ready!")
 
-# ================= الأوامر (Commands) =================
-
-@bot.command(name="play")
+@bot.command()
 async def play(ctx: commands.Context, *, search: str):
-    """أمر تشغيل الأغاني"""
-    
-    # 1. التحقق من وجود المستخدم في روم صوتي
-    if not ctx.author.voice:
-        return await ctx.send("❌ لازم تدخل روم صوتي أولاً!")
+    # تحقق هل السيرفر متصل فعلياً؟
+    if not wavelink.Pool.nodes:
+        return await ctx.send("❌ عذراً، سيرفر الصوت (Lavalink) غير متصل حالياً. انتظر ثواني وجرب مرة ثانية.")
 
-    # 2. الانضمام للروم أو الحصول على المشغل الحالي
+    if not ctx.author.voice:
+        return await ctx.send("❌ ادخل روم صوتي أولاً!")
+
     if not ctx.voice_client:
-        try:
-            vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
-        except Exception as e:
-            return await ctx.send(f"❌ ما قدرت أدخل الروم: {e}")
+        vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
     else:
         vc: wavelink.Player = ctx.voice_client
 
-    # 3. البحث عن المقطع (يوتيوب أو روابط مباشرة)
     try:
-        # البحث الافتراضي يكون عبر YouTube
         tracks = await wavelink.Playable.search(search)
-        
         if not tracks:
-            return await ctx.send("❌ مالقيت شي بهذا الاسم.")
+            return await ctx.send("❌ ما لقيت نتائج.")
 
         track = tracks[0]
-        
-        # 4. تشغيل المقطع
         await vc.play(track)
         await ctx.send(f"🎶 جاري تشغيل: **{track.title}**")
-
+        
     except Exception as e:
-        print(f"Error: {e}")
-        await ctx.send("❌ حدث خطأ أثناء محاولة التشغيل.")
+        print(f"Play Error: {e}")
+        await ctx.send("❌ فشل تشغيل الصوت.")
 
-@bot.command()
-async def stop(ctx: commands.Context):
-    """إيقاف التشغيل والخروج"""
-    vc: wavelink.Player = ctx.voice_client
-    if vc:
-        await vc.disconnect()
-        await ctx.send("👋 تم فصل البوت.")
-
-@bot.command()
-async def skip(ctx: commands.Context):
-    """تخطي الأغنية الحالية"""
-    vc: wavelink.Player = ctx.voice_client
-    if vc and vc.playing:
-        await vc.skip()
-        await ctx.send("⏭️ تم التخطي.")
-
-# ================= التشغيل =================
-TOKEN = os.getenv("TOKEN")
-if TOKEN:
-    bot.run(TOKEN)
-else:
-    print("❌ خطأ: لم يتم العثور على TOKEN في متغيرات البيئة (Railway/Render)")
+bot.run(os.getenv("TOKEN"))
