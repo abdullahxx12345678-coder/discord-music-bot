@@ -1,60 +1,50 @@
 import discord
 from discord.ext import commands
-import wavelink
-import os
 
+# ====== INTENTS ======
 intents = discord.Intents.default()
 intents.message_content = True
 intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# تأكد أن الرابط لا ينتهي بـ /
-# بدلاً من الرابط القديم، جرب استخدام بروتوكول wss (WebSocket Secure)
-LAVALINK_URL = "wss://lavalink-server-tlb3.onrender.com" 
-LAVALINK_PASSWORD = "12345678"
-
+# ====== READY ======
 @bot.event
 async def on_ready():
-    print(f"✅ Bot is ready: {bot.user}")
-    
-    # تعريف النود
-    node = wavelink.Node(
-        uri=LAVALINK_URL, 
-        password=LAVALINK_PASSWORD,
-        inactive_timeout=60,
-        use_https=True # أضف هذا السطر للتأكيد
-    )
+    print(f"Logged in as {bot.user}")
 
-@bot.event
-async def on_wavelink_node_ready(payload: wavelink.NodeReadyEventPayload):
-    print(f"🚀 Node {payload.node.identifier} is connected and ready!")
-
+# ====== JOIN ======
 @bot.command()
-async def play(ctx: commands.Context, *, search: str):
-    # تحقق هل السيرفر متصل فعلياً؟
-    if not wavelink.Pool.nodes:
-        return await ctx.send("❌ عذراً، سيرفر الصوت (Lavalink) غير متصل حالياً. انتظر ثواني وجرب مرة ثانية.")
-
+async def join(ctx):
     if not ctx.author.voice:
-        return await ctx.send("❌ ادخل روم صوتي أولاً!")
+        return await ctx.send("❌ ادخل روم صوتي أول")
 
-    if not ctx.voice_client:
-        vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
-    else:
-        vc: wavelink.Player = ctx.voice_client
+    channel = ctx.author.voice.channel
+    vc = ctx.voice_client
 
     try:
-        tracks = await wavelink.Playable.search(search)
-        if not tracks:
-            return await ctx.send("❌ ما لقيت نتائج.")
+        if vc is None:
+            await channel.connect()
+        else:
+            await vc.move_to(channel)
 
-        track = tracks[0]
-        await vc.play(track)
-        await ctx.send(f"🎶 جاري تشغيل: **{track.title}**")
-        
+        await ctx.send("✔ دخلت الروم")
+
     except Exception as e:
-        print(f"Play Error: {e}")
-        await ctx.send("❌ فشل تشغيل الصوت.")
+        await ctx.send("❌ فشل الدخول")
+        print(e)
 
-bot.run(os.getenv("TOKEN"))
+# ====== LEAVE ======
+@bot.command()
+async def leave(ctx):
+    if ctx.voice_client:
+        await ctx.voice_client.disconnect()
+        await ctx.send("👋 طلعت من الروم")
+
+# ====== PING ======
+@bot.command()
+async def ping(ctx):
+    await ctx.send("pong")
+
+# ====== RUN ======
+bot.run("TOKEN")
