@@ -10,8 +10,8 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # تأكد أن الرابط لا ينتهي بـ /
-LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com:443"
-LAVALINK_PASSWORD = "12345678"
+LAVALINK_URL = "https://lavalink.ajieantho.id"
+LAVALINK_PASSWORD = "codeluy"
 
 @bot.event
 async def on_ready():
