@@ -10,7 +10,8 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # تأكد أن الرابط لا ينتهي بـ /
-LAVALINK_URL = "https://lavalink-server-tlb3.onrender.com"
+# بدلاً من الرابط القديم، جرب استخدام بروتوكول wss (WebSocket Secure)
+LAVALINK_URL = "wss://lavalink-server-tlb3.onrender.com" 
 LAVALINK_PASSWORD = "12345678"
 
 @bot.event
@@ -21,14 +22,9 @@ async def on_ready():
     node = wavelink.Node(
         uri=LAVALINK_URL, 
         password=LAVALINK_PASSWORD,
-        inactive_timeout=60
+        inactive_timeout=60,
+        use_https=True # أضف هذا السطر للتأكيد
     )
-    
-    try:
-        # الربط مع السيرفر
-        await wavelink.Pool.connect(nodes=[node], client=bot)
-    except Exception as e:
-        print(f"❌ Connection error: {e}")
 
 @bot.event
 async def on_wavelink_node_ready(payload: wavelink.NodeReadyEventPayload):
